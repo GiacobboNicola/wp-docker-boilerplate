@@ -1,0 +1,62 @@
+# https://taskfile.dev
+
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  GREETING: Welcome to the WordPress Docker stack!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+      - go-task --list
+    silent: true
+
+  dotenv:
+    desc: copy sample.env to .env
+    cmds:
+      - cp sample.env .env
+    sources:
+      - sample.env
+    generate:
+      - .env
+
+  start:
+    desc: start the wordpress stack
+    cmds:
+      - docker compose up {{if .CLI_ARGS}} -d {{else}} {{end}} mariadb phpmyadmin php nginx
+    deps:
+      - dotenv
+
+  stop:
+    desc: stop the wordpress stack
+    cmds:
+      - docker compose stop {{.CLI_ARGS}}
+
+  build:
+    desc: build the containers
+    cmds:
+      - docker compose build {{.CLI_ARGS}}
+    deps:
+      - dotenv
+
+  wp-cli:
+    desc: use wp-cli (passing args e.g -- 'core update' or -- 'plugin update --all')
+    cmds:
+      - docker compose run --rm wp {{.CLI_ARGS}}
+
+  install-wp:
+    desc: install wordpress using wp-cli
+    cmds:
+      - mkdir -p ./wordpress
+      - docker compose up -d mariadb
+      # Wait for MariaDB to be healthy
+      - docker compose run --rm wait-for-it mariadb:3306 -t 60 
+      - docker compose run --rm wp core download
+      - docker compose run --rm wp config create --dbname=${MYSQL_DATABASE} --dbuser=${MYSQL_USER} --dbpass=${MYSQL_PASSWORD} --dbhost=${WORDPRESS_DB_HOST} --dbprefix=${WORDPRESS_TABLE_PREFIX}
+      - docker compose run --rm wp core install --url=https://localhost --title=WordPressStack --admin_user=${WORDPRESS_USER} --admin_password=${WORDPRESS_PASSWORD} --admin_email=${WORDPRESS_EMAIL}
+      - docker compose stop mariadb
+    deps:
+      - dotenv

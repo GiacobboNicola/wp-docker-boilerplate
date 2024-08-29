@@ -1,0 +1,5 @@
+wordpress
+mariadb
+.env
+php/wp-config*.php
+.task
