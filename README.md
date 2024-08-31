@@ -22,3 +22,6 @@ This is a boilerplate to develop WordPress locally with an up-to-date stack. The
 2. In a browser, navigate to `http://localhost:80` to access the WordPress. The user is `admin` and the password is `password`. You can change these credentials in the `.env` file (see the `sample.env` file as an example).
 3. Run `task stop` to stop the all the containers or `task stop -- CONTAINER_NAME` to stop a specific container.
 
+## Notes
+1. If you face some permission issues with one of the folder generated when running docker compose (`wordpress` or `mariadb`), you can change the owner of those folder: `sudo chown -R $USER:$USER`.
+2. Instead of generating a new WordPress installation you can simply copy and paste your own WordPress site in `wordpress` folder (a more detailed guide will be available soon).
