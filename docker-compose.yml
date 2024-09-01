@@ -6,19 +6,16 @@ networks:
 
 services:
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:1.15.12-alpine
     container_name: nginx
     restart: unless-stopped
     volumes:
       - ./wordpress:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot/:ro
     ports:
       - 80:80
       - 443:443
-    depends_on:
-      - php
-      - mariadb
     networks:
       - wp-network
 
@@ -40,11 +37,12 @@ services:
     networks:
       - wp-network
 
-  php:
+  wp-site:
     build:
       context: ./php
       dockerfile: Dockerfile
-    container_name: php
+      target: site
+    container_name: wp-site
     restart: unless-stopped
     volumes:
       - ./wordpress:/var/www/html
@@ -54,11 +52,12 @@ services:
     networks:
       - wp-network
 
-  wp:
+  wp-cli:
     build:
       context: ./php
       dockerfile: Dockerfile
-    container_name: wp
+      target: cli
+    container_name: wp-cli
     restart: unless-stopped
     entrypoint: ['wp', '--allow-root']
     volumes:
@@ -85,3 +84,10 @@ services:
     image: willwill/wait-for-it
     networks:
       - wp-network
+
+  # certbot to generate ssl certificate
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw

@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine
+FROM php:8.2-fpm-alpine AS site
 
 # Copy php configuration
 ADD ./config/www.conf /usr/local/etc/php-fpm.d/www.conf
@@ -17,6 +17,9 @@ WORKDIR /var/www/html
 
 # Install PHP extensions
 RUN docker-php-ext-install mysqli pdo pdo_mysql && docker-php-ext-enable pdo_mysql
+
+# second stage
+FROM site AS cli
 
 # Install WP-CLI
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
